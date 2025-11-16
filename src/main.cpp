@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <iostream>
 #include <string>
+#include <cctype>
 #include <shellapi.h>
 
 
@@ -91,7 +92,33 @@ Store Apps EXE Downloader
 
             if (!input.empty())
             {
-                ShellExecuteA(NULL, "open", ("https://get.microsoft.com/installer/download/" + input).c_str(), NULL, NULL, SW_HIDE);
+                // Additional validation: app ID should only contain alphanumeric characters and limited special chars
+                bool valid_app_id = true;
+                for (char c : input)
+                {
+                    if (!std::isalnum(static_cast<unsigned char>(c)) && c != '-' && c != '_')
+                    {
+                        valid_app_id = false;
+                        break;
+                    }
+                }
+
+                // Limit app ID length to prevent potential issues
+                if (input.length() > 100)
+                {
+                    valid_app_id = false;
+                }
+
+                if (valid_app_id)
+                {
+                    ShellExecuteA(NULL, "open", ("https://get.microsoft.com/installer/download/" + input).c_str(), NULL, NULL, SW_HIDE);
+                }
+                else
+                {
+                    SetConsoleTextAttribute(output, console_colors::red_foreground);
+
+                    std::cerr << "Failed: Invalid app id format" << std::endl;
+                }
             }
             else
             {
